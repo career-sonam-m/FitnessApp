@@ -8,8 +8,21 @@ import uuid
 import streamlit as st
 from dotenv import load_dotenv
 
-# Load environment variables (including LangSmith tracing configs)
+# Load local .env values; on Streamlit Community Cloud, secrets are supplied via st.secrets.
 load_dotenv()
+try:
+    for secret_name in (
+        "OPENAI_API_KEY",
+        "OPENAI_API_BASE",
+        "LANGSMITH_TRACING",
+        "LANGSMITH_API_KEY",
+        "LANGSMITH_PROJECT",
+        "LANGSMITH_ENDPOINT",
+    ):
+        if not os.getenv(secret_name) and secret_name in st.secrets:
+            os.environ[secret_name] = str(st.secrets[secret_name])
+except FileNotFoundError:
+    pass
 
 from Langchain_Fitness_ChatBuddy import (
     init_fitbuddy as backend_init_fitbuddy,

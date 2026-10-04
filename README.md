@@ -60,7 +60,8 @@ FitnessApp/
 ├── Langchain_Fitness_ChatBuddy.py   # Core backend AI engine (ReAct Agent) & CLI script
 ├── streamlit_app.py                # Streamlit UI application
 ├── requirements.txt                 # Python dependencies
-├── .env                             # Environment config (API keys & tracing settings)
+├── .gitignore                       # Excludes local secrets and virtual environment
+├── .env                             # Optional local-only environment config (never commit)
 └── README.md                        # Project Documentation
 ```
 
@@ -101,6 +102,7 @@ OPENAI_API_KEY="sk-proj-your-openai-key"
 LANGSMITH_TRACING="true"
 LANGSMITH_API_KEY="lsv2_pt_your-langsmith-key"
 LANGSMITH_PROJECT="fitness-app"
+LANGSMITH_ENDPOINT="https://apac.api.smith.langchain.com"
 ```
 
 ---
@@ -120,6 +122,53 @@ streamlit run streamlit_app.py
 python Langchain_Fitness_ChatBuddy.py
 ```
 
+## 🌐 Live Demo
+
+FitBuddy is deployed on Streamlit Community Cloud, so **anyone can use it directly in the browser with no installation or API key**:
+
+**https://fitnessapp-h7klc2mc92mjeifcy7qnf5.streamlit.app/**
+
+Source code: https://github.com/career-sonam-m/FitnessApp
+
+> If the app has been idle, Streamlit may show a "wake up" button. Click it and wait a few seconds.
+
+## ☁️ Deploying on Streamlit Community Cloud
+
+Streamlit Community Cloud deploys this app from a GitHub repository and gives it a public URL that you can share. Visitors can use the app, but requests use **your configured OpenAI API key** and may incur charges on your OpenAI account.
+
+### 1. Push the project to GitHub
+
+Create a GitHub repository and push the project files. Do **not** upload `.env`, `.venv`, or API keys. The repository should include at least:
+
+```text
+Langchain_Fitness_ChatBuddy.py
+streamlit_app.py
+requirements.txt
+README.md
+```
+
+### 2. Create the Streamlit app
+
+1. Sign in at [share.streamlit.io](https://share.streamlit.io/) with GitHub.
+2. Select **Create app**, then choose your repository, branch, and `streamlit_app.py` as the main file.
+3. In the app's advanced settings, select **Python 3.12**.
+4. Before launching, open the app's **Settings → Secrets** and add the TOML below, replacing the example values with your own:
+
+```toml
+OPENAI_API_KEY = "your-openai-api-key"
+LANGSMITH_TRACING = "true"
+LANGSMITH_API_KEY = "your-langsmith-api-key"
+LANGSMITH_PROJECT = "fitness-app"
+LANGSMITH_ENDPOINT = "https://apac.api.smith.langchain.com"
+```
+
+`LANGSMITH_API_KEY`, `LANGSMITH_PROJECT`, and `LANGSMITH_ENDPOINT` are optional if you do not need tracing. For a LangSmith workspace outside APAC, use its [regional endpoint](https://docs.langchain.com/langsmith/trace-with-langchain).
+
+5. Save the secrets and deploy. Once the app reports that it is running, open its **App URL** and send a message to verify it.
+6. Use **Share** in Streamlit Community Cloud to copy the URL for other people.
+
+The app reads credentials from Streamlit Cloud Secrets (or a local `.env` file when running locally). Never commit your secrets or put them in the source code. Since the app uses your API key for every visitor, monitor usage and disable or restrict the app if you need to control costs.
+
 ### Sample questions to try
 
 The Streamlit app includes clickable samples for the calculator, workout and nutrition advice, and multi-turn memory. To test memory, send the **Remember my goals** prompt first, then send **Test follow-up memory** in the same conversation.
@@ -133,6 +182,17 @@ You can also try:
 ---
 
 ## 🔍 Observing Agent Execution in LangSmith
+
+### Setting up LangSmith
+
+1. Sign up at **[smith.langchain.com](https://smith.langchain.com)** (free tier is enough).
+2. Go to **Settings → API Keys** and create a key (starts with `lsv2_`). Put it in `LANGSMITH_API_KEY`.
+3. Set `LANGSMITH_TRACING="true"` and a project name in `LANGSMITH_PROJECT` (it is created automatically on the first trace).
+4. **Region matters:** if your LangSmith URL is `apac.smith.langchain.com` (or `eu.smith.langchain.com`), set `LANGSMITH_ENDPOINT` to `https://apac.api.smith.langchain.com` (or `https://eu.api.smith.langchain.com`). US accounts can omit it. A wrong region causes `403 Forbidden` errors in the logs and no traces appear.
+5. Restart the app after editing `.env`, since it is read only at startup.
+6. On Streamlit Community Cloud, put the same keys in **Secrets** (see the deployment section above).
+
+### Viewing traces
 
 1. Ensure `LANGSMITH_TRACING="true"` is set in your `.env`.
 2. Start the Streamlit app or CLI and ask a tool-requiring prompt:

@@ -9,6 +9,8 @@
 # ─────────────────────────────────────────────────
 # STEP 1: Import Required Libraries & Environment Setup
 # ─────────────────────────────────────────────────
+import ast                                           # Parses math expressions into a syntax tree for safe evaluation
+import operator                                      # Arithmetic functions used by the safe evaluator
 import os                                            # Provides operating system interactions (reading environment variables)
 from dotenv import load_dotenv                       # Parses key-value pairs from a local .env file into os.environ
 
@@ -28,6 +30,31 @@ from langchain_core.output_parsers import StrOutputParser # Parses raw LLM AIMes
 # ─────────────────────────────────────────────────
 # STEP 2: Define Custom Tools (Math & Calorie Calculator)
 # ─────────────────────────────────────────────────
+_BIN_OPS = {
+    ast.Add: operator.add, ast.Sub: operator.sub, ast.Mult: operator.mul,
+    ast.Div: operator.truediv, ast.FloorDiv: operator.floordiv,
+    ast.Mod: operator.mod, ast.Pow: operator.pow,
+}
+_UNARY_OPS = {ast.UAdd: operator.pos, ast.USub: operator.neg}
+_MAX_EXPONENT = 100
+
+
+def _safe_eval(node):
+    """Evaluate only numeric literals and basic arithmetic operators from a parsed AST."""
+    if isinstance(node, ast.Expression):
+        return _safe_eval(node.body)
+    if isinstance(node, ast.Constant) and isinstance(node.value, (int, float)) and not isinstance(node.value, bool):
+        return node.value
+    if isinstance(node, ast.UnaryOp) and type(node.op) in _UNARY_OPS:
+        return _UNARY_OPS[type(node.op)](_safe_eval(node.operand))
+    if isinstance(node, ast.BinOp) and type(node.op) in _BIN_OPS:
+        left, right = _safe_eval(node.left), _safe_eval(node.right)
+        if isinstance(node.op, ast.Pow) and abs(right) > _MAX_EXPONENT:
+            raise ValueError("Exponent too large")
+        return _BIN_OPS[type(node.op)](left, right)
+    raise ValueError("Unsupported expression")
+
+
 def simple_calculator(expression: str) -> str:
     """
     Safely computes arithmetic expressions requested by the user during chat.
@@ -41,9 +68,10 @@ def simple_calculator(expression: str) -> str:
         str: String result of the math evaluation or a descriptive error message.
     """
     try:
-        # Evaluate arithmetic string using Python's built-in evaluator
-        # Note: In production, consider restricted evaluation libraries like numexpr or simpleeval.
-        return str(eval(expression))
+        if len(expression) > 200:
+            return "Invalid math expression."
+        result = _safe_eval(ast.parse(expression.strip(), mode="eval"))
+        return str(result)
     except Exception:
         return "Invalid math expression."
 
