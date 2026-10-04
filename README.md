@@ -1,228 +1,144 @@
----
-title: FitBuddy AI Fitness Coach
-emoji: 💪
-colorFrom: "#e94560"
-colorTo: "#f5a623"
-sdk: docker
-pinned: false
-license: mit
----
+# 🏋️ FitBuddy – ReAct Agent AI Fitness Coach
 
-# 🏋️ FitBuddy – AI Fitness Coach Chatbot
-
-FitBuddy is a conversational AI fitness coach built with **LangChain** and **OpenAI GPT-4o-mini**. It remembers your fitness goals across a conversation, performs calorie/math calculations on the fly, and responds in a friendly, concise coaching style.
-
-**Available as:**
-- 🖥️ Terminal-based chatbot
-- 🌐 Streamlit web app with modern UI
+**FitBuddy** is your personal 24/7 AI-powered fitness and nutrition assistant. Built on a 100% **Agentic ReAct Architecture (`create_agent`)**, **OpenAI GPT-4o-mini**, and **LangSmith**, FitBuddy goes beyond static chatbot responses to actively reason, compute math, and remember your personal health journey.
 
 ---
 
-## Features
+### 💡 What is this App for?
 
-- 🧠 **Conversation Memory** – Remembers user-provided workout preferences and goals within a session using `ConversationBufferMemory`.
-- 🔢 **Calculator Tool** – Answers calorie-math and arithmetic queries (e.g., *"If I burn 90 cal in 10 mins, how many in 1 hour?"*).
-- 🤖 **Agent + Chain Fallback** – Uses a LangChain agent as the primary responder, with a simple prompt chain as a fallback if the agent encounters an error.
-- 💬 **Two Modes** – Run a built-in demo conversation **or** launch an interactive chat loop in your terminal.
+FitBuddy is designed to solve common personal training challenges by serving as an intelligent, interactive companion for:
+
+1. **🏋️ Customized Workout & Training Guidance**:
+   - Get personalized routine recommendations for strength training, cardio, HIIT, yoga, and active recovery tailored to your fitness level.
+2. **🥗 Nutrition & Macro Planning Advice**:
+   - Receive meal tips, protein/macro allocation guidance, and dietary recommendations aligned with your fitness objectives (weight loss, muscle gain, maintenance).
+3. **🔢 Exact Calorie & Fitness Math Calculations**:
+   - Unlike basic LLMs that hallucinate arithmetic, FitBuddy's **ReAct Agent** autonomously invokes a built-in Python **Calculator Tool** to compute exact calorie burns, target heart rate zones, macro splits, and unit conversions (e.g. *lbs to kg* or *burn rate projections*).
+4. **🧠 Multi-Turn Goal Memory**:
+   - FitBuddy remembers your workout preferences, injuries, and health targets across the conversation so you never have to repeat your goals.
+5. **📊 Full Agent Observability**:
+   - Built with native **LangSmith** tracing so developers and users can inspect the agent's step-by-step reasoning loop, tool execution inputs/outputs, latency, and token metrics.
 
 ---
 
-## Project Structure
+**Available Interfaces:**
+- 🌐 **Streamlit Web App** (`streamlit_app.py`) – Interactive graphical user interface with responsive dark styling and quick prompt buttons.
+- 🖥️ **Command-Line Interface** (`Langchain_Fitness_ChatBuddy.py`) – Terminal-based interactive agent loop for developers and command-line execution.
+
+---
+
+## 📚 Key LangChain Concepts & Topics Covered
+
+This project demonstrates modern **LangChain** architecture patterns:
+
+1. **ReAct Agent Architecture (`create_agent`)**:
+   - Building a 100% fully agentic tool-calling ReAct agent that loops through reasoning steps to decide whether to call tools (e.g. `Calculator`) or respond directly.
+2. **Tools & Tool Wrappers (`Tool`)**:
+   - Encapsulating Python functions into LangChain `Tool` objects with natural language descriptions for model tool selection.
+3. **LLM Integration (`ChatOpenAI`)**:
+   - Initializing Chat Model wrappers with temperature control (`0.7`), specific model routing (`gpt-4o-mini`), API keys, and custom endpoints.
+4. **Memory Management (Sliding Window Session Memory)**:
+   - Managing multi-turn state across user interactions using sliding window session context formatting.
+5. **Observability & Tracing (`LangSmith`)**:
+   - Automated tracing of agent decision loops, prompt inputs, tool calls, execution latency, and token consumption using standard environment variables (`LANGSMITH_TRACING="true"`).
+
+---
+
+## 🌟 Features
+
+- 🤖 **100% Agentic ReAct Agent** – Dynamically invokes tools for calorie & arithmetic calculations.
+- 🧠 **Multi-Turn Session Memory** – Retains user goal history across turns using a sliding window memory manager.
+- 🔢 **Arithmetic Calculator Tool** – Evaluates math and calorie calculations accurately.
+- 📊 **LangSmith Observability** – Automatic tracing of runs, agent steps, latency, and token usage metrics.
+
+---
+
+## 📂 Project Structure
 
 ```
 FitnessApp/
-├── Langchain_Fitness_ChatBuddy.py   # Terminal-based chatbot
-├── streamlit_app.py                # Streamlit web app
-├── Dockerfile                       # Docker configuration for deployment
+├── Langchain_Fitness_ChatBuddy.py   # Core backend AI engine (ReAct Agent) & CLI script
+├── streamlit_app.py                # Streamlit UI application
 ├── requirements.txt                 # Python dependencies
-├── .env                             # API keys (not committed to version control)
-├── .env.example                     # Example environment file
-└── README.md
+├── .env                             # Environment config (API keys & tracing settings)
+└── README.md                        # Project Documentation
 ```
 
 ---
 
-## Prerequisites
+## ⚙️ Setup & Installation
 
-- Python 3.12+
-- An [OpenAI API key](https://platform.openai.com/api-keys)
+### 1. Prerequisites
+- Python **3.12+**
+- OpenAI API key
+- LangSmith API key *(for tracing)*
 
----
-
-## Setup
-
-### 1. Clone / download the project
+### 2. Virtual Environment Setup
 
 ```bash
-git clone <your-repo-url>
-cd FitnessApp
+# Create virtual environment
+python -m venv .venv
+
+# Activate environment (Windows PowerShell)
+.\.venv\Scripts\Activate.ps1
+
+# Activate environment (macOS / Linux)
+source .venv/bin/activate
 ```
 
-### 2. Create and activate a virtual environment (recommended)
-
-```bash
-python -m venv venv
-# Windows
-venv\Scripts\activate
-# macOS / Linux
-source venv/bin/activate
-```
-
-### 3. Install dependencies
+### 3. Install Dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 4. Configure environment variables
+### 4. Environment Configuration (`.env`)
 
-Create a `.env` file in the project root (or edit the existing one):
+Configure your keys in the `.env` file located at the project root:
 
 ```env
-OPENAI_API_KEY=your-openai-api-key-here
-# Optional: only needed if using a custom OpenAI-compatible endpoint
-OPENAI_API_BASE=https://api.openai.com/v1
+OPENAI_API_KEY="sk-proj-your-openai-key"
+LANGSMITH_TRACING="true"
+LANGSMITH_API_KEY="lsv2_pt_your-langsmith-key"
+LANGSMITH_PROJECT="fitness-app"
 ```
-
-> ⚠️ **Never commit your `.env` file to version control.** Add it to `.gitignore`.
 
 ---
 
-## Running the App
+## 🚀 Running the Application
 
-### Option 1: Terminal-based Chatbot
+### Option 1: Streamlit Web UI (Recommended)
+
+```bash
+streamlit run streamlit_app.py
+```
+*Access the Web UI at http://localhost:8501*
+
+### Option 2: Command-Line (CLI) Chatbot
 
 ```bash
 python Langchain_Fitness_ChatBuddy.py
 ```
 
-You will be prompted to choose a mode:
+### Sample questions to try
 
-| Option | Mode | Description |
-|--------|------|-------------|
-| `1` | Demo | Runs 3 pre-scripted turns showing memory + calculator |
-| `2` | Interactive | Live chat loop – type freely and press Enter |
+The Streamlit app includes clickable samples for the calculator, workout and nutrition advice, and multi-turn memory. To test memory, send the **Remember my goals** prompt first, then send **Test follow-up memory** in the same conversation.
 
-### Interactive mode commands
+You can also try:
 
-| Input | Action |
-|-------|--------|
-| `memory` | Print the full conversation history |
-| `quit` / `exit` / `q` | End the session |
+- “If rowing burns 120 calories every 15 minutes, calculate my burn for 45 minutes. Then estimate 50 minutes at a 10% lower burn rate and show the arithmetic.”
+- “I weigh 165 lb. Convert that to kilograms, estimate a daily protein target at 1.6 grams per kg, then suggest three vegetarian meal ideas to help reach it.”
+- “Build a 30-minute beginner dumbbell workout for home. I have sensitive knees, so suggest low-impact moves, modifications, and a warm-up.”
 
 ---
 
-### Option 2: Streamlit Web App
+## 🔍 Observing Agent Execution in LangSmith
 
-```bash
-streamlit run streamlit_app.py
-```
-
-The web app features:
-- 🎨 Modern dark-themed UI
-- 💬 Chat interface with message history
-- ⚡ Quick prompts sidebar
-- 📊 Session statistics
-- 🔧 API key configuration in sidebar
-
----
-
-## Docker Deployment
-
-### Local Docker Testing
-
-```bash
-# Build the image
-docker build -t fitbuddy-app .
-
-# Run the container
-docker run -p 7860:7860 --env-file .env fitbuddy-app
-```
-
-Access the app at http://localhost:7860
-
----
-
-### Deploy to Hugging Face Spaces
-
-1. Create a new Space at [huggingface.co/spaces](https://huggingface.co/spaces)
-   - **SDK**: Docker
-   - **Visibility**: Public or Private
-
-2. Upload these files:
-   - `Dockerfile`
-   - `requirements.txt`
-   - `streamlit_app.py`
-   - `README.md` (this file)
-
-3. Set your `OPENAI_API_KEY` as a Space Secret:
-   - Go to Settings → Repository secrets
-   - Add secret name: `OPENAI_API_KEY`
-   - Add your API key value
-
-4. Hugging Face will automatically build and deploy your app!
-
----
-
-## How It Works
-
-```
-User Input
-    │
-    ▼
-LangChain Agent  ──(tool call)──▶  Calculator Tool
-    │                                     │
-    └──────────────◀─────────────────────┘
-    │  (agent fails)
-    ▼
-Simple LLM Chain  (prompt | GPT-4o-mini | StrOutputParser)
-    │  (chain fails + math detected)
-    ▼
-Direct Calculator Fallback
-```
-
-1. **Agent** – `create_agent` wraps GPT-4o-mini with the Calculator tool and a fitness-focused system prompt.  
-2. **Chain** – A `ChatPromptTemplate | ChatOpenAI | StrOutputParser` pipeline is used as a fallback.  
-3. **Memory** – `ConversationBufferMemory` stores all messages and injects history into every subsequent prompt.
-
----
-
-## Dependencies
-
-| Package | Purpose |
-|---------|---------|
-| `langchain` | Core agent / chain / memory framework |
-| `langchain-openai` | OpenAI chat model integration |
-| `langchain-community` | Community integrations |
-| `langchain-classic` | `ConversationBufferMemory` |
-| `python-dotenv` | Load `.env` into environment variables |
-
----
-
-## Example Session
-
-```
-=== FitBuddy AI Fitness Coach ===
-1. Run demo conversation
-2. Start interactive chat
-
-Enter your choice (1 or 2): 2
-
-You: Hi FitBuddy, I like cardio and yoga.
-FitBuddy: That's a great combo! Cardio boosts endurance while yoga improves flexibility and recovery. 💪
-
-You: If I burn 90 calories in 10 minutes, how many in 1 hour?
-FitBuddy: That works out to 540 calories in an hour – solid cardio session!
-
-You: What workouts did I say I like?
-FitBuddy: You mentioned you enjoy cardio and yoga!
-
-You: quit
-Goodbye! Stay fit! 💪
-```
-
----
-
-## License
-
-This project is for educational and personal use. Refer to the course guidelines for any academic submission constraints.
+1. Ensure `LANGSMITH_TRACING="true"` is set in your `.env`.
+2. Start the Streamlit app or CLI and ask a tool-requiring prompt:
+   > *"If I burn 120 calories in 15 minutes of rowing, how many calories will I burn in 45 minutes?"*
+3. Log into **[smith.langchain.com](https://smith.langchain.com)**.
+4. Select the **`fitness-app`** project to view the agent trace showing:
+   - Agent reasoning steps
+   - Tool call inputs/outputs (`Calculator`)
+   - Model latency and token usage metrics
